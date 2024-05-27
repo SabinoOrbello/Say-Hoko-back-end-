@@ -128,18 +128,20 @@ namespace Say_Hoko.Controllers
                 // Genera una chiave di almeno 256 bit utilizzando un algoritmo di hash
                 using var sha = SHA256.Create();
                 var key = sha.ComputeHash(Encoding.UTF8.GetBytes(jwtKey));
-
                 var tokenDescriptor = new SecurityTokenDescriptor
                 {
                     Subject = new ClaimsIdentity(new Claim[]
                     {
         new(ClaimTypes.Name, user.UserId.ToString()),
-        new(ClaimTypes.GivenName, user.Nome)
+        new(ClaimTypes.GivenName, user.Nome),
+        new Claim(ClaimTypes.Role, user.Role)
+
                     }),
                     Expires = DateTime.UtcNow.AddDays(7),
                     SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature),
                     Issuer = _configuration["Jwt:Issuer"]
                 };
+
 
                 var token = tokenHandler.CreateToken(tokenDescriptor);
                 var tokenString = tokenHandler.WriteToken(token);

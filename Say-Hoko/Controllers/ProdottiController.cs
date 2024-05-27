@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -82,7 +83,11 @@ namespace Say_Hoko.Controllers
 
         // POST: api/Prodotti
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+
+
+
         [HttpPost]
+        [Authorize(Roles = "admin")]
         public async Task<ActionResult<Prodotti>> PostProdotti(Prodotti prodotti)
         {
             _context.Prodottis.Add(prodotti);
@@ -90,6 +95,7 @@ namespace Say_Hoko.Controllers
 
             return CreatedAtAction("GetProdotti", new { id = prodotti.ProdottoId }, prodotti);
         }
+
 
         // DELETE: api/Prodotti/5
         [HttpDelete("{id}")]

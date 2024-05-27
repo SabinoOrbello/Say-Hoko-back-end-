@@ -26,8 +26,25 @@ namespace Say_Hoko.Controllers
         {
             return await _context.Ordinis
                 .Include(o => o.DettagliOrdines)
+                .ThenInclude(d => d.Prodotto)
                 .Include(o => o.Pagamentis)
+
                 .ToListAsync();
+        }
+
+        [HttpGet("user/{userId}")]
+        public async Task<ActionResult<IEnumerable<Ordini>>> GetOrdiniUtente(int userId)
+        {
+            var ordiniUtente = await _context.Ordinis
+                .Where(o => o.UserId == userId)
+                .ToListAsync();
+
+            if (ordiniUtente == null || ordiniUtente.Count == 0)
+            {
+                return NotFound("Nessun ordine trovato per l'utente specificato.");
+            }
+
+            return ordiniUtente;
         }
 
 
@@ -47,6 +64,7 @@ namespace Say_Hoko.Controllers
 
             return ordine;
         }
+
 
         // PUT: api/Ordini/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
@@ -84,11 +102,29 @@ namespace Say_Hoko.Controllers
         [HttpPost]
         public async Task<ActionResult<Ordini>> PostOrdini(Ordini ordini)
         {
+            // Verifica se l'utente ha già effettuato ordini
+            var userOrders = await _context.Ordinis
+                .Where(o => o.UserId == ordini.UserId)
+                .ToListAsync();
+
+            // Applica uno sconto del 20% se è il primo ordine
+            bool isFirstOrder = userOrders.Count == 0;
+            decimal discount = isFirstOrder ? 0.20m : 0m;
+
+            // Calcola il totale scontato
+            decimal originalTotal = (decimal)ordini.DettagliOrdines.Sum(item => item.Prezzo * item.Quantità);
+            decimal discountedTotal = originalTotal * (1 - discount);
+
+            // Imposta il totale scontato nell'ordine
+            ordini.Totale = discountedTotal;
+
+            // Aggiungi l'ordine al contesto
             _context.Ordinis.Add(ordini);
             await _context.SaveChangesAsync();
 
             return CreatedAtAction("GetOrdini", new { id = ordini.OrdiniId }, ordini);
         }
+
 
         // DELETE: api/Ordini/5
         [HttpDelete("{id}")]
