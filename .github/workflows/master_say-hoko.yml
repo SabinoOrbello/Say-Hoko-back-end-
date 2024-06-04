@@ -40,12 +40,21 @@ jobs:
     environment:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
+    permissions:
+      id-token: write #This is required for requesting the JWT
 
     steps:
       - name: Download artifact from build job
         uses: actions/download-artifact@v3
         with:
           name: .net-app
+      
+      - name: Login to Azure
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_D63C2A1F59644E0E9E511BA56D1FBF4E }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_051E12816526468DA5CAFC0A6B59433C }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_36905A96B20647549219817E8DD16345 }}
 
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
@@ -53,5 +62,5 @@ jobs:
         with:
           app-name: 'Say-Hoko'
           slot-name: 'Production'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_011CAD859B7D4037B2B51377F5099E71 }}
           package: .
+          
